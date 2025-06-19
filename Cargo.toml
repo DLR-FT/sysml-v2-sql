@@ -1,0 +1,36 @@
+[package]
+name = "sysml-v2-sql"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.5.9", features = ["derive"] }
+colog = "1.3.0"
+color-eyre = "0.6.3"
+dotenv = "0.15.0"
+eyre = "0.6.12"
+log = "0.4.22"
+parse_link_header = "0.4.0"
+reqwest = { version = "0.12.12", default-features = false, features = [
+  "rustls-tls",
+  "json",
+  "cookies",
+] }
+rusqlite = "0.31.0"
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = "1.0.120"
+tokio = { version = "1.45.1", features = ["rt-multi-thread", "time"] }
+
+[dev-dependencies]
+tempfile = "3.10.1"
+test_bin = "0.4.0"
+
+[features]
+default = ["bundled-sqlite"]
+
+# We found the bundled sqlite to be about 10 times slower than the one from the nixpkgs. Thus we
+# default for bundled sqlite (less hassle), but allow for externally provided sqlite to be used
+# instead.
+bundled-sqlite = ["rusqlite/bundled-full"]
