@@ -57,3 +57,21 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - name: Checking each commit to be properly formatted
         run: nix run .#check-commits -- nix fmt -- --ci
+  check-license:
+    name: Check license
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # checkout full tree
+          fetch-depth: 0
+      - uses: cachix/install-nix-action@v25
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - uses: cachix/cachix-action@v14
+        with:
+          name: dlr-ft
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - name: Checking each commit to be properly formatted
+        run: nix develop --command cargo deny check license
