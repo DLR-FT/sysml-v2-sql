@@ -1,0 +1,18 @@
+[licenses]
+unused-allowed-license = "warn"
+confidence-threshold = 0.95
+allow = [
+  "Apache-2.0",
+  "BSD-3-Clause",
+  "ISC",
+  "LGPL-3.0",
+  "MIT",
+  "MPL-2.0",
+  "Unicode-3.0",
+  "Unicode-DFS-2016",
+]
+
+[[licenses.clarify]]
+crate = "ring"
+expression = "ISC"
+license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
