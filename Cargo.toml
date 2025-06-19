@@ -3,6 +3,10 @@ name = "sysml-v2-sql"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
+description = "Tool to interact with SysML v2 models via SQLite"
+documentation = "https://github.com/DLR-FT/sysml-v2-sql"
+repository = "https://github.com/DLR-FT/sysml-v2-sql"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

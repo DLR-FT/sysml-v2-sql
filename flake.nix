@@ -57,6 +57,7 @@
             cargo-deny
             cargo-flamegraph
             cargo-llvm-cov
+            cargo-release
             cargo-udeps
             clippy
             rust-analyzer
