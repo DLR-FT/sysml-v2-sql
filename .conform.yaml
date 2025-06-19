@@ -4,7 +4,6 @@ policies:
       header:
         length: 89
         imperative: true
-        case: lower
         invalidLastCharacters: .
       body:
         required: true

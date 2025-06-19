@@ -25,6 +25,9 @@ It can:
       > assets/SysML-schema.json
     cargo run --release -- /dev/null json-schema-to-sql-schema --no-init --dump-sql assets/schema.sql assets/SysML-schema.json
     ```
+  - Releasing new version:
+    1. Check that the new version can be release: `cargo release minor`
+    2. If you are happy, do the release: `cargo release minor --execute --no-publish`
 
 # License and Copyright
 
