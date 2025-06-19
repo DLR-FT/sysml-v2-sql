@@ -1,0 +1,55 @@
+on: [push]
+
+env:
+  EXTRA_NIX_FLAGS: --log-format raw-with-logs --print-build-logs
+
+jobs:
+  check:
+    name: Nix flake check
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v25
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - uses: cachix/cachix-action@v14
+        with:
+          name: dlr-ft
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - run: nix flake check
+  build-pkg:
+    name: ${{ matrix.pkg }} for ${{ matrix.system }}
+    runs-on:
+      - ubuntu-latest
+    strategy:
+      matrix:
+        system:
+          # TODO make this work well
+          # - "aarch64-linux"
+          - x86_64-linux
+        # Generated using
+        # nix run .#update-ci
+        pkg:
+          - check-commits
+          - release-package
+          - sysml-v2-sql
+          - sysml-v2-sql-static
+          - sysml-v2-sql-x86_64-windows
+          - update-ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v25
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - uses: cachix/cachix-action@v14
+        with:
+          name: dlr-ft
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - id: supported-system
+        name: Skip unsupported builds
+        run: $(nix eval --json .#packages.${{ matrix.system }}.${{ matrix.pkg }}.meta.available)
+      - if: steps.supported-system.conclusion == 'success'
+        run:
+          nix build $EXTRA_NIX_FLAGS .#packages.${{ matrix.system }}.${{ matrix.pkg
+          }}
