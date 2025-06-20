@@ -1,3 +1,5 @@
+name: Meta
+
 on:
   pull_request:
     branches: [main]
@@ -21,6 +23,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - name: Checking each commit to be merged for conformance
         run: nix run .#check-commits -- nix run nixpkgs#conform enforce
+
   check-workflow-packages:
     name: Check workflow derivation coverage
     runs-on:
@@ -39,6 +42,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - name: Checking each commit to have its derivations covered by CI
         run: nix run .#check-commits -- nix run .#update-ci -- --check
+
   check-fmt:
     name: Check formatting
     runs-on:
@@ -57,6 +61,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - name: Checking each commit to be properly formatted
         run: nix run .#check-commits -- nix fmt -- --ci
+
   check-license:
     name: Check license
     runs-on:

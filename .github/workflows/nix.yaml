@@ -1,3 +1,5 @@
+name: Nix
+
 on: [push]
 
 env:
@@ -18,6 +20,7 @@ jobs:
           name: dlr-ft
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
       - run: nix flake check
+
   build-pkg:
     name: ${{ matrix.pkg }} for ${{ matrix.system }}
     runs-on:
