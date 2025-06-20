@@ -1,6 +1,6 @@
 [package]
 name = "sysml-v2-sql"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Tool to interact with SysML v2 models via SQLite"
@@ -19,23 +19,27 @@ eyre = "0.6.12"
 log = "0.4.22"
 parse_link_header = "0.4.0"
 reqwest = { version = "0.12.12", default-features = false, features = [
-  "rustls-tls",
   "json",
   "cookies",
 ] }
 rusqlite = "0.31.0"
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
-tokio = { version = "1.45.1", features = ["rt-multi-thread", "time"] }
+tokio = { version = "1.45.1", default-features = false, features = [
+  "rt-multi-thread",
+  "time",
+] }
 
 [dev-dependencies]
 tempfile = "3.10.1"
 test_bin = "0.4.0"
 
 [features]
-default = ["bundled-sqlite"]
+default = ["bundled-sqlite", "bundled-tls"]
 
 # We found the bundled sqlite to be about 10 times slower than the one from the nixpkgs. Thus we
 # default for bundled sqlite (less hassle), but allow for externally provided sqlite to be used
 # instead.
 bundled-sqlite = ["rusqlite/bundled-full"]
+bundled-tls = ["reqwest/rustls-tls"]
+native-tls = ["reqwest/native-tls"]

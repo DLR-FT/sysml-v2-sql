@@ -1,15 +1,27 @@
 name: Release
+
 permissions:
   contents: write
 on:
   push:
     tags:
       - v*
+
+env:
+  EXTRA_NIX_FLAGS: --log-format raw-with-logs --print-build-logs
+
 jobs:
   x86_64-linux---release:
     name: Build release artifacts for x86_64-linux
     runs-on:
       - ubuntu-latest
+    strategy:
+      matrix:
+        system:
+          # TODO make this work well
+          # - "aarch64-linux"
+          - x86_64-linux
+        pkg: [release-package]
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v25
@@ -19,7 +31,15 @@ jobs:
         with:
           name: dlr-ft
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - name: Release
+      - id: supported-system
+        name: Skip unsupported builds
+        run: $(nix eval --json .#packages.${{ matrix.system }}.${{ matrix.pkg }}.meta.available)
+      - if: steps.supported-system.conclusion == 'success'
+        run:
+          nix build $EXTRA_NIX_FLAGS .#packages.${{ matrix.system }}.${{ matrix.pkg
+          }}
+      - if: steps.supported-system.conclusion == 'success'
+        name: Release
         uses: softprops/action-gh-release@v2
         with:
           draft: ${{ contains(github.ref_name, 'rc') }}

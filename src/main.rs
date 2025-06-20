@@ -79,6 +79,7 @@ fn main() -> Result<()> {
         }
         Commands::Fetch {
             base_url,
+            allow_invalid_certs,
             dump_json,
             page_size,
             pretty,
@@ -90,7 +91,7 @@ fn main() -> Result<()> {
             }
 
             let base_url = reqwest::Url::parse(&base_url)?;
-            let sysml_browser = fetch::SysmlV2ApiBrowser::new(base_url)?;
+            let sysml_browser = fetch::SysmlV2ApiBrowser::new(base_url, allow_invalid_certs)?;
 
             // start an async runtime
             let rt = tokio::runtime::Runtime::new().unwrap();

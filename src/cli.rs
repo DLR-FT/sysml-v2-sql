@@ -91,6 +91,10 @@ pub(crate) enum Commands {
         #[command(subcommand)]
         project: ProjectSelector,
 
+        /// Allow fetching via HTTPS from a server without valid certificate
+        #[arg(short, long)]
+        allow_invalid_certs: bool,
+
         /// JSON File to write output to
         #[arg(short, long, action)]
         dump_json: Option<PathBuf>,

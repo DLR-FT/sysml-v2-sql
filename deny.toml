@@ -4,12 +4,12 @@ confidence-threshold = 0.95
 allow = [
   "Apache-2.0",
   "BSD-3-Clause",
+  "CDLA-Permissive-2.0",
   "ISC",
   "LGPL-3.0",
   "MIT",
   "MPL-2.0",
   "Unicode-3.0",
-  "Unicode-DFS-2016",
 ]
 
 [[licenses.clarify]]
