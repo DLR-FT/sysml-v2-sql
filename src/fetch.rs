@@ -28,15 +28,31 @@ pub struct SysmlV2ApiBrowser {
 }
 
 impl SysmlV2ApiBrowser {
-    pub fn new(base_url: Url) -> Result<Self> {
+    pub fn new(base_url: Url, allow_invalid_certs: bool) -> Result<Self> {
         ensure!(
             !base_url.path().ends_with('/'),
             "base_url must not end with /"
         );
 
-        let http_client = Client::builder()
-            .danger_accept_invalid_certs(true) // TODO revisit this choice
-            .build()?;
+        let http_client;
+
+        #[cfg(any(feature = "bundled-tls", feature = "native-tls"))]
+        {
+            if allow_invalid_certs {
+                warn!("accepting invalid certificates, connection to server is NOT trustworthy");
+            }
+            http_client = Client::builder().danger_accept_invalid_certs(allow_invalid_certs);
+        }
+
+        #[cfg(not(any(feature = "bundled-tls", feature = "native-tls")))]
+        {
+            http_client = Client::builder();
+            if allow_invalid_certs {
+                warn!("-a/--allow-invalid-certs is ignored since no TLS support was compiled in at all");
+            }
+        }
+
+        let http_client = http_client.build()?;
 
         let maybe_username = match std::env::var("SYSML_USERNAME") {
             Err(std::env::VarError::NotPresent) => None,

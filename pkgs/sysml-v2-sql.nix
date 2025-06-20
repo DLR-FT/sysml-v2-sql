@@ -2,6 +2,7 @@
   lib,
   rustPlatform,
   pkg-config,
+  openssl,
   sqlite,
 }:
 
@@ -54,8 +55,12 @@ rustPlatform.buildRustPackage {
 
   nativeBuildInputs = [ pkg-config ];
 
-  buildInputs = [ sqlite ];
+  buildInputs = [
+    openssl
+    sqlite
+  ];
   buildNoDefaultFeatures = true; # we don't want rusqlite's bundled sqlite
+  buildFeatures = [ "native-tls" ]; # use native openssl
   cargoLock = {
     lockFile = ../Cargo.lock;
     allowBuiltinFetchGit = true;
