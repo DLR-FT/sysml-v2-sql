@@ -37,7 +37,9 @@ jobs:
           - check-commits
           - release-package
           - sysml-v2-sql
-          - sysml-v2-sql-static
+          - sysml-v2-sql-aarch64-linux
+          - sysml-v2-sql-i686-linux
+          - sysml-v2-sql-x86_64-linux
           - sysml-v2-sql-x86_64-windows
           - update-ci
     steps:
