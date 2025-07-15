@@ -78,8 +78,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
     // Statement to insert into the elements table
     let statement = format!(
         r#"INSERT OR REPLACE INTO "elements" VALUES ({})"#,
-        std::iter::repeat("?")
-            .take(elements_table_columns.len())
+        std::iter::repeat_n("?", elements_table_columns.len())
             .collect::<Vec<_>>()
             .join(", ")
     );
@@ -373,7 +372,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
                     error!("the JSON attribute {json_attr_name} is believed to be literal, but was found with the following value:\n{v:#?}");
                 }
 
-                // This property is complex, but neither a know polymorph field nor a relation nor
+                // This property is complex, but neither a known polymorph field nor a relation nor
                 // an extended property know to our schema
                 // Occurences of this indicate a bug in our business logic
                 v @ Value::Array(_) | v @ Value::Object(_) => {
