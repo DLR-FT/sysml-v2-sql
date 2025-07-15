@@ -184,6 +184,7 @@ CREATE TABLE "relations" (
 		'originalPortDefinition',
 		'originalType',
 		'output',
+		'operand',
 		'ownedAction',
 		'ownedActorParameter',
 		'ownedAllocation',
