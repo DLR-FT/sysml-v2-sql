@@ -226,7 +226,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
                     if POLYMORPHIC_PROPS.iter().any(|kpf| kpf == column_name) {
                         trace!("the {column_name:?} column is known to be polymorph, setting it to NULL");
                     } else {
-                        warn!("db expects column {column_name:?} of type {column_type}, but JSON is {v:?}");
+                        warn!("db expects column {column_name:?} of type {column_type:?}, but JSON is {v:?}");
                         warn!("skipping this entry, setting it to NULL instead");
                     }
                     RusValue::Null
@@ -300,7 +300,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
                 // this is a 1:1 relation (i.e. `{"@id": "..."}` in the JSON)
                 o @ Value::Object(json_object) if is_relation_object(json_object) => {
                     let target_element = Element::deserialize(o).unwrap();
-                                    trace!("found 1:1 relation of type {json_attr_name}");
+                                    trace!("found 1:1 relation of type {json_attr_name:?}");
 
                     observed_relational_attrs.insert(json_attr_name.to_owned());
                     relations_inserted += 1;
@@ -320,7 +320,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
                     // try to parse this as a 1:* relation (i.e. `[{"@id": "..."}]` in the JSON)
                     let target_elements: Vec<Element> = Vec::deserialize(a).unwrap();
 
-                    trace!("found a 1:* relation of type {json_attr_name}");
+                    trace!("found a 1:* relation of type {json_attr_name:?}");
                     observed_relational_attrs.insert(json_attr_name.to_owned());
                     relations_inserted += target_elements.len();
 
@@ -369,7 +369,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
                         && POLYMORPHIC_PROPS.iter().all(|kpf| kpf != json_attr_name) =>
                 {
                     observed_unexpected_polymorph_attrs.insert(json_attr_name.to_owned());
-                    error!("the JSON attribute {json_attr_name} is believed to be literal, but was found with the following value:\n{v:#?}");
+                    error!("the JSON attribute {json_attr_name:?} is believed to be literal, but was found with the following value:\n{v:#?}");
                 }
 
                 // This property is complex, but neither a known polymorph field nor a relation nor
@@ -377,7 +377,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
                 // Occurences of this indicate a bug in our business logic
                 v @ Value::Array(_) | v @ Value::Object(_) => {
                     observed_unexpected_complex_attrs.insert(json_attr_name.to_owned());
-                    error!("the JSON attribute {json_attr_name} is a complex JSON property but it is neither a relation nor an known extended property:\n{v:#?}");
+                    error!("the JSON attribute {json_attr_name:?} is a complex JSON property but it is neither a relation nor an known extended property:\n{v:#?}");
                 }
             }
         }
@@ -465,14 +465,14 @@ fn get_table_columns(
             "BLOB" => rusqlite::types::Type::Blob,
             "ANY" => rusqlite::types::Type::Text, // TODO revisit this hack
             x => bail!(
-                "unexpected SQLite data type {x:?} encountered in schema of {table_name} table"
+                "unexpected SQLite data type {x:?} encountered in schema of {table_name:?} table"
             ),
         };
         columns_typed.push((column_name, parsed_ty));
     }
 
     trace!(
-        "found the following {table_name} table columns, in total {}:\n{columns_typed:#?}",
+        "found the following {table_name:?} table columns, in total {}:\n{columns_typed:#?}",
         columns_typed.len()
     );
 
