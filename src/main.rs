@@ -56,9 +56,17 @@ fn main() -> Result<()> {
 
     match args.command {
         Commands::InitDb => init_db::init_db(&mut conn)?,
-        Commands::ImportJson { file, vacuum } => {
+        Commands::ImportJson {
+            file,
+            vacuum,
+            syside_automator_compat_mode,
+        } => {
+            let config = import::ImporterConfiguration {
+                syside_automator_compat_mode,
+                vacuum,
+            };
             let elements_stream = crate::util::CloneableJsonArrayStreamIterator::new(&file)?;
-            import::import_from_iter(elements_stream, &mut conn, vacuum)?;
+            import::import_from_iter(elements_stream, &mut conn, &config)?;
         }
         Commands::JsonSchemaToSqlSchema {
             file,

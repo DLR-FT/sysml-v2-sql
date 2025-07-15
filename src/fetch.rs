@@ -388,7 +388,8 @@ pub async fn fetch_from_url_to_file(
     // deduplicate_elements(&mut elements, &mut element_id_idx_map)?;
 
     if let Some(conn) = maybe_conn {
-        crate::import::import_from_slice(&elements, conn, false)?;
+        let import_conf = crate::import::ImporterConfiguration::default();
+        crate::import::import_from_slice(&elements, conn, &import_conf)?;
     }
 
     Ok(())

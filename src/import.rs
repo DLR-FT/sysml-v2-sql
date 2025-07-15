@@ -13,6 +13,16 @@ use crate::{
     util::escape_sql_ident,
 };
 
+/// Configuration for the importer
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub(crate) struct ImporterConfiguration {
+    /// Whether to enable the sysid compat mode
+    pub(crate) syside_automator_compat_mode: bool,
+
+    /// Whether to vacuum the db after an import
+    pub(crate) vacuum: bool,
+}
+
 /// JSON representation of an Element in the SysML-v2 API
 #[derive(Debug, Clone, Hash, PartialEq, serde::Deserialize, serde::Serialize)]
 pub(crate) struct Element {
@@ -27,12 +37,12 @@ pub(crate) struct Element {
 pub(crate) fn import_from_slice(
     elements: &[Element],
     conn: &mut Connection,
-    vacuum: bool,
+    import_config: &ImporterConfiguration,
 ) -> Result<()> {
     let maybe_elements_iter = elements
         .iter()
         .map(|e| -> Result<_, std::convert::Infallible> { Ok(e.to_owned()) });
-    import_from_iter(maybe_elements_iter, conn, vacuum)
+    import_from_iter(maybe_elements_iter, conn, import_config)
 }
 
 /// # Overview
@@ -49,7 +59,7 @@ pub(crate) fn import_from_slice(
 pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
     elements: impl Clone + Iterator<Item = Result<Element, E>>,
     conn: &mut Connection,
-    vacuum: bool,
+    import_config: &ImporterConfiguration,
 ) -> Result<()> {
     let import_t0 = std::time::Instant::now();
 
@@ -298,7 +308,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
                 }
 
                 // this is a 1:1 relation (i.e. `{"@id": "..."}` in the JSON)
-                o @ Value::Object(json_object) if is_relation_object(json_object) => {
+                o @ Value::Object(json_object) if is_relation_object(json_object, import_config) => {
                     let target_element = Element::deserialize(o).unwrap();
                                     trace!("found 1:1 relation of type {json_attr_name:?}");
 
@@ -315,7 +325,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
 
                 // this is a 1:* relation (i.e. `[{"@id": "..."}]` in the JSON)
                 a @ Value::Array(array_elements)
-                    if array_elements.iter().all(|v| matches!(v, Value::Object(json_object) if is_relation_object(json_object))) =>
+                    if array_elements.iter().all(|v| matches!(v, Value::Object(json_object) if is_relation_object(json_object,import_config))) =>
                 {
                     // try to parse this as a 1:* relation (i.e. `[{"@id": "..."}]` in the JSON)
                     let target_elements: Vec<Element> = Vec::deserialize(a).unwrap();
@@ -428,7 +438,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
         warn!("the following attributes were not always understood:\n{problematic_attributes:#?}");
     }
 
-    crate::tweaks::after_bulk_insert(conn, vacuum)?;
+    crate::tweaks::after_bulk_insert(conn, import_config.vacuum)?;
 
     info!("import took {:?}", import_t0.elapsed());
     Ok(())
@@ -494,9 +504,28 @@ fn insert_relation(
 }
 
 /// Checks whether an object is a relation object
-///
-/// It is assumed, that relation objects are JSON objects with single attribute, which must be named "@id" and of type string.
-fn is_relation_object(json_object: &serde_json::Map<String, Value>) -> bool {
-    let maybe_id_attribute = json_object.get(ELEMENT_PK_COL);
-    matches!(maybe_id_attribute, Some(Value::String(_))) && json_object.len() == 1
+fn is_relation_object(
+    json_object: &serde_json::Map<String, Value>,
+    import_config: &ImporterConfiguration,
+) -> bool {
+    match (
+        json_object.len(),
+        json_object.get(ELEMENT_PK_COL),
+        json_object.get("@uri"),
+        import_config.syside_automator_compat_mode,
+    ) {
+        // per default, it is assumed, that relation objects are
+        // - JSON objects with single attribute
+        // - which must be named "@id"
+        // - and be of type string
+        (1, Some(Value::String(_)), None, _) => true,
+
+        // in sysid_automator_compat_mode, object relations might also contain an
+        // - `@uri` attribute
+        // - of type string
+        (2, Some(Value::String(_)), Some(Value::String(_)), true) => true,
+
+        // default to false
+        _ => false,
+    }
 }

@@ -48,6 +48,21 @@ pub(crate) enum Commands {
         /// removed since the last vacuum/initial database creation.
         #[arg(short, long, action)]
         vacuum: bool,
+
+        /// Enable the SysIDE Automator compatibility mode
+        ///
+        /// SysIDE emits JSON in a flavor slightly incomaptible with the upstream SysML v2 JSON
+        /// schema. These are detailed in in SysIDE Automators's documentation under "Advanced
+        /// Technical Guide/JSON Exports and Imports".
+        ///
+        /// This mode tries to glance over said differences, by making the importer more tolerant.
+        ///
+        /// Use at your own risk!
+        ///
+        /// For further information, consider the SysIDE Automator documentation:
+        /// https://docs.sensmetry.com/latest/automator/advanced.html#automator-json-exports-imports
+        #[arg(long, action)]
+        syside_automator_compat_mode: bool,
     },
 
     /// Initialize a db, creating all missing tables to the db
