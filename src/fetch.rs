@@ -265,6 +265,7 @@ pub async fn fetch_from_url_to_file(
     maybe_path: &Option<PathBuf>,
     maybe_conn: Option<&mut rusqlite::Connection>,
     pretty_json: bool,
+    importer_config: crate::import::ImporterConfiguration,
 ) -> Result<()> {
     let fetch_t0 = std::time::Instant::now();
 
@@ -388,8 +389,7 @@ pub async fn fetch_from_url_to_file(
     // deduplicate_elements(&mut elements, &mut element_id_idx_map)?;
 
     if let Some(conn) = maybe_conn {
-        let import_conf = crate::import::ImporterConfiguration::default();
-        crate::import::import_from_slice(&elements, conn, &import_conf)?;
+        crate::import::import_from_slice(&elements, conn, &importer_config)?;
     }
 
     Ok(())

@@ -21,6 +21,9 @@ pub(crate) struct ImporterConfiguration {
 
     /// Whether to vacuum the db after an import
     pub(crate) vacuum: bool,
+
+    /// Disable foreign key checks
+    pub(crate) disable_fk_checks: bool,
 }
 
 /// JSON representation of an Element in the SysML-v2 API
@@ -65,8 +68,13 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
 
     crate::tweaks::before_bulk_insert(conn)?;
 
-    debug!("enabling foreign key constraint support");
-    conn.pragma_update(None, "foreign_keys", "ON")?;
+    if import_config.disable_fk_checks {
+        warn!("disabling foreign key constraint checking");
+        conn.pragma_update(None, "foreign_keys", "OFF")?;
+    } else {
+        debug!("enabling foreign key constraint checking");
+        conn.pragma_update(None, "foreign_keys", "ON")?;
+    }
 
     debug!("starting db transaction for import");
     let db_ta = conn.transaction()?;

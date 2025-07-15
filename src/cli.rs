@@ -1,5 +1,5 @@
 //! Command Line Interface (CLI) of this software
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -20,6 +20,43 @@ pub(crate) struct Cli {
     pub command: Commands,
 }
 
+#[derive(Args)]
+#[group(required = false, multiple = false)]
+pub(crate) struct ImportOptions {
+    /// Do not check foreign keys during import
+    ///
+    /// This is a debugging aid, allowing to import incomplete model dumps.
+    ///
+    /// Use at your own risk!
+    #[arg(long, action)]
+    pub(crate) disable_foreign_key_checks: bool,
+
+    /// Run vacuum after the import
+    ///
+    /// This makes the import significantly slower and is not required, however especially
+    /// after huge imports, vacuum can both reduce the on-disk size of the database and
+    /// positively affect the performance of later database operations. Vacuum is similar to
+    /// defragemention, hence its biggest impact is when ran in a database which had many rows
+    /// removed since the last vacuum/initial database creation.
+    #[arg(short, long, action)]
+    pub(crate) vacuum: bool,
+
+    /// Enable the SysIDE Automator compatibility mode
+    ///
+    /// SysIDE emits JSON in a flavor slightly incomaptible with the upstream SysML v2 JSON
+    /// schema. These are detailed in in SysIDE Automators's documentation under "Advanced
+    /// Technical Guide/JSON Exports and Imports".
+    ///
+    /// This mode tries to glance over said differences, by making the importer more tolerant.
+    ///
+    /// Use at your own risk!
+    ///
+    /// For further information, consider the SysIDE Automator documentation:
+    /// https://docs.sensmetry.com/latest/automator/advanced.html#automator-json-exports-imports
+    #[arg(long, action)]
+    pub(crate) syside_automator_compat_mode: bool,
+}
+
 #[derive(Subcommand)]
 pub(crate) enum Commands {
     /// Import data from JSON file to the db
@@ -35,34 +72,10 @@ pub(crate) enum Commands {
     /// do not exist in the JSON file will be removed.
     ImportJson {
         /// File to import from
-        ///
-        ///
         file: PathBuf,
 
-        /// Run vacuum after the import
-        ///
-        /// This makes the import significantly slower and is not required, however especially
-        /// after huge imports, vacuum can both reduce the on-disk size of the database and
-        /// positively affect the performance of later database operations. Vacuum is similar to
-        /// defragemention, hence its biggest impact is when ran in a database which had many rows
-        /// removed since the last vacuum/initial database creation.
-        #[arg(short, long, action)]
-        vacuum: bool,
-
-        /// Enable the SysIDE Automator compatibility mode
-        ///
-        /// SysIDE emits JSON in a flavor slightly incomaptible with the upstream SysML v2 JSON
-        /// schema. These are detailed in in SysIDE Automators's documentation under "Advanced
-        /// Technical Guide/JSON Exports and Imports".
-        ///
-        /// This mode tries to glance over said differences, by making the importer more tolerant.
-        ///
-        /// Use at your own risk!
-        ///
-        /// For further information, consider the SysIDE Automator documentation:
-        /// https://docs.sensmetry.com/latest/automator/advanced.html#automator-json-exports-imports
-        #[arg(long, action)]
-        syside_automator_compat_mode: bool,
+        #[command(flatten)]
+        import_options: ImportOptions,
     },
 
     /// Initialize a db, creating all missing tables to the db
@@ -125,6 +138,9 @@ pub(crate) enum Commands {
         /// Do not import the fetched data into the DB
         #[arg(short, long, action)]
         no_import: bool,
+
+        #[command(flatten)]
+        import_options: ImportOptions,
     },
 }
 
@@ -161,4 +177,20 @@ pub enum CommitSelector {
 
     /// Select the latest commit from the default branch
     DefaultBranch,
+}
+
+impl From<ImportOptions> for crate::import::ImporterConfiguration {
+    fn from(value: ImportOptions) -> Self {
+        let ImportOptions {
+            disable_foreign_key_checks,
+            vacuum,
+            syside_automator_compat_mode,
+        } = value;
+
+        Self {
+            disable_fk_checks: disable_foreign_key_checks,
+            vacuum,
+            syside_automator_compat_mode,
+        }
+    }
 }
