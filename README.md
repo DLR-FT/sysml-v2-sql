@@ -17,14 +17,24 @@ It can:
 # Development
 
 - Re-Generating the assets/schema.sql:
+
   - Download the most up-to-date JSON schema, for example from
     https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-API-Services/refs/heads/master/conf/json/schema/api/schemas.json
   - ```bash
+    # preferred source of trut, but possibly outdated
+    curl \
+      https://www.omg.org/spec/KerML/20240201/KerML.json > assets/KerML-schema.json
+    cargo run --release -- /dev/null json-schema-to-sql-schema --no-init --dump-sql assets/schema.sql assets/KerML-schema.json
+
+    # OR
+
+    # more up-to-date, but possibly not (yet) standardized
     curl \
       https://raw.githubusercontent.com/Systems-Modeling/SysML-v2-API-Services/refs/heads/master/conf/json/schema/api/schemas.json \
       > assets/SysML-schema.json
     cargo run --release -- /dev/null json-schema-to-sql-schema --no-init --dump-sql assets/schema.sql assets/SysML-schema.json
     ```
+
   - Releasing new version:
     1. Check that the new version can be release: `cargo release minor`
     2. If you are happy, do the release: `cargo release minor --execute --no-publish`
