@@ -56,9 +56,13 @@ fn main() -> Result<()> {
 
     match args.command {
         Commands::InitDb => init_db::init_db(&mut conn)?,
-        Commands::ImportJson { file, vacuum } => {
+        Commands::ImportJson {
+            file,
+            import_options,
+        } => {
+            let importer_config = import_options.into();
             let elements_stream = crate::util::CloneableJsonArrayStreamIterator::new(&file)?;
-            import::import_from_iter(elements_stream, &mut conn, vacuum)?;
+            import::import_from_iter(elements_stream, &mut conn, &importer_config)?;
         }
         Commands::JsonSchemaToSqlSchema {
             file,
@@ -85,6 +89,7 @@ fn main() -> Result<()> {
             pretty,
             no_import,
             project,
+            import_options,
         } => {
             if dump_json.is_none() && pretty {
                 warn!("the -p/--pretty flag has no effect if FILE is not set");
@@ -109,6 +114,7 @@ fn main() -> Result<()> {
                     &dump_json,
                     maybe_conn,
                     pretty,
+                    import_options.into(),
                 )
                 .await?;
 
