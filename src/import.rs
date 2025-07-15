@@ -78,8 +78,7 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
     // Statement to insert into the elements table
     let statement = format!(
         r#"INSERT OR REPLACE INTO "elements" VALUES ({})"#,
-        std::iter::repeat("?")
-            .take(elements_table_columns.len())
+        std::iter::repeat_n("?", elements_table_columns.len())
             .collect::<Vec<_>>()
             .join(", ")
     );
