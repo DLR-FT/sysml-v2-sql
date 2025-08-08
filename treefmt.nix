@@ -18,5 +18,10 @@
     ];
   };
   programs.rustfmt.enable = true;
+  programs.sql-formatter = {
+    # TODO enable once https://github.com/numtide/treefmt-nix/issues/400 is fixed
+    # enable = true;
+    dialect = "sqlite";
+  };
   programs.taplo.enable = true; # formats TOML files
 }
