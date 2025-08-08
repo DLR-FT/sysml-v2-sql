@@ -8,11 +8,11 @@ use std::{
     fs::File,
     path::PathBuf,
     sync::atomic::Ordering::Relaxed,
-    sync::{atomic::AtomicUsize, Arc},
+    sync::{Arc, atomic::AtomicUsize},
 };
 
 use api_data_types::{Branch, Project};
-use eyre::{bail, ensure, Result};
+use eyre::{Result, bail, ensure};
 use reqwest::{Client, RequestBuilder, Response, Url};
 use tokio::task::JoinHandle;
 
@@ -48,7 +48,9 @@ impl SysmlV2ApiBrowser {
         {
             http_client = Client::builder();
             if allow_invalid_certs {
-                warn!("-a/--allow-invalid-certs is ignored since no TLS support was compiled in at all");
+                warn!(
+                    "-a/--allow-invalid-certs is ignored since no TLS support was compiled in at all"
+                );
             }
         }
 
@@ -145,7 +147,9 @@ pub async fn interprete_cli(
                 info!("the following project where found:\n{projects:#?}");
                 bail!("error finding any matching project");
             } else if matching_projects.len() > 1 {
-                error!("multiple projects matched the specified name {project_name:?}, please be more specific");
+                error!(
+                    "multiple projects matched the specified name {project_name:?}, please be more specific"
+                );
                 info!("the following projects where found:\n{matching_projects:#?}");
                 bail!("error finding exactly one matching project");
             }
@@ -181,7 +185,9 @@ pub async fn interprete_cli(
                 info!("the following branch where found:\n{branches:#?}");
                 bail!("error finding any matching branch");
             } else if matching_branches.len() > 1 {
-                error!("multiple branches matched the specified name {branch_name:?}, please be more specific");
+                error!(
+                    "multiple branches matched the specified name {branch_name:?}, please be more specific"
+                );
                 info!("the following branches where found:\n{matching_branches:#?}");
                 bail!("error finding exactly one matching branch");
             }
@@ -230,7 +236,9 @@ pub fn check_for_conflicting_elements<'a>(
 
             // existing element is **not** identical, this is an issue
             Some(existing_element) => {
-                bail!("Differing Elements with colliding ids where found:\n{existing_element:#?}\n{new_element:#?}");
+                bail!(
+                    "Differing Elements with colliding ids where found:\n{existing_element:#?}\n{new_element:#?}"
+                );
             }
 
             // no existing element
