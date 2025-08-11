@@ -1,7 +1,7 @@
 // TODO Track element ids of thos eelements imported in the current operation, remove all relations of these
 
 use color_eyre::Section;
-use eyre::{bail, Result};
+use eyre::{Result, bail};
 use rusqlite::{Connection, Statement, ToSql};
 use serde::Deserialize;
 use serde_json::{Map, Value};
@@ -224,9 +224,13 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
                 Some(Value::String(s)) => RusValue::Text(s.to_string()),
                 Some(v @ Value::Array(_)) | Some(v @ Value::Object(_)) => {
                     if POLYMORPHIC_PROPS.iter().any(|kpf| kpf == column_name) {
-                        trace!("the {column_name:?} column is known to be polymorph, setting it to NULL");
+                        trace!(
+                            "the {column_name:?} column is known to be polymorph, setting it to NULL"
+                        );
                     } else {
-                        warn!("db expects column {column_name:?} of type {column_type:?}, but JSON is {v:?}");
+                        warn!(
+                            "db expects column {column_name:?} of type {column_type:?}, but JSON is {v:?}"
+                        );
                         warn!("skipping this entry, setting it to NULL instead");
                     }
                     RusValue::Null
@@ -401,7 +405,9 @@ pub(crate) fn import_from_iter<E: Send + Sync + std::error::Error + 'static>(
     }
 
     if !observed_unexpected_complex_attrs.is_empty() {
-        debug!("the following complex attributes where observed and ignored at least once:\n{observed_unexpected_complex_attrs:#?}");
+        debug!(
+            "the following complex attributes where observed and ignored at least once:\n{observed_unexpected_complex_attrs:#?}"
+        );
     }
 
     let known_db_column_set: HashSet<_> = elements_table_columns

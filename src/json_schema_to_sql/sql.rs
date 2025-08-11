@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
-use eyre::{bail, ensure, Result};
+use eyre::{Result, bail, ensure};
 
 use crate::{
-    config::{ELEMENTS_TABLE, ELEMENT_PK_COL, EXTENDED_TABLE, POLYMORPHIC_PROPS, RELATIONS_TABLE},
+    config::{ELEMENT_PK_COL, ELEMENTS_TABLE, EXTENDED_TABLE, POLYMORPHIC_PROPS, RELATIONS_TABLE},
     util::{escape_sql_ident, escape_sql_str_lit},
 };
 
@@ -78,9 +78,9 @@ impl SqlRepresentation {
                 // allow relaxation of varying TEXT types
                 if !(self_ty.starts_with("TEXT") && other_ty.starts_with("TEXT")) {
                     ensure!(
-                    self_ty == other_ty,
-                    "Fusing two SqlRepresentations with differing type: {self_ty} vs. {other_ty}"
-                );
+                        self_ty == other_ty,
+                        "Fusing two SqlRepresentations with differing type: {self_ty} vs. {other_ty}"
+                    );
                 } else if self_ty.starts_with("TEXT") && other_ty.starts_with("TEXT") {
                     *self_ty = "TEXT".to_string();
                 }

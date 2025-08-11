@@ -19,7 +19,7 @@ The following design principles were established to guide the conversion process
    TODO revisit this choice.
 */
 
-use eyre::{bail, ensure, Result};
+use eyre::{Result, bail, ensure};
 use rusqlite::Connection;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -75,7 +75,9 @@ pub(crate) fn consume_json_schema(
                         }
 
                         unexpected_def => {
-                            bail!("Found a definition of unexpected type inside of composite inside {def_name}:\n{unexpected_def:#?}")
+                            bail!(
+                                "Found a definition of unexpected type inside of composite inside {def_name}:\n{unexpected_def:#?}"
+                            )
                         }
                     }
                 }
@@ -98,7 +100,9 @@ pub(crate) fn consume_json_schema(
                         }
 
                         unexpected_def => {
-                            bail!("Found a definition of unexpected type inside of composite inside {def_name}:\n{unexpected_def:#?}")
+                            bail!(
+                                "Found a definition of unexpected type inside of composite inside {def_name}:\n{unexpected_def:#?}"
+                            )
                         }
                     }
                 }
@@ -145,7 +149,9 @@ pub(crate) fn consume_json_schema(
                 ty: "ANY".to_owned(),
             },
         ) {
-            bail!("there was already a column present for the known polymorphic property {name}:\n{x:#?}");
+            bail!(
+                "there was already a column present for the known polymorphic property {name}:\n{x:#?}"
+            );
         }
     }
 
