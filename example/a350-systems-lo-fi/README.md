@@ -4,15 +4,24 @@
 
 This example consists of the following files:
 
-- `AviationExample.sysml`: the actual model.
-- `AviationLibraryATA.sysml`: a library with common aircraft system building blocks.
-- `model.json`: The JSON representation of the model when fetched from a SysML-v2 API compliant model server.
-- `model.svg`: A visual rendering of the entire model.
-- `README.md`: This file.
+- `DemoDASC.svg`: a visual rendering of the model, a (very low-fidelity) A350 airliner.
+- `DemoDASC.sysml`: the actual model.
+- `Library.svg`: a visual rendering of the _AviationLibraryATA_.
+- `model.json`: the JSON representation of the model when fetched from a SysML-v2 API compliant model server.
+- `queries`: a couple of example SQL queries for that given model.
+  - `GetAvionicsElements.sql`: Collects all instantiations of the definitions in the selected ATA package `AircraftSystemsATAs`.
+  - `GetStructureElements.sql`: Collects all instantiations of the definitions in the selected ATA package `StructureATAs`.
+  - `SelectParts.sql`: Find all part instances and their definitions (as in their types).
+  - `SelectPartsExceptLibrary.sql`: Find part instances and definitions that are not instantiated by the _AviationLibraryATA_.
+- `README.md`: this file.
 
 The model contains a low-fidelity (only a handful of systems) model of an A350. This is the entire model:
 
-![A350 Lo-Fi Example](./model.svg)
+![A350 Lo-Fi Example](./DemoDASC.svg)
+
+And this is the mockup of an ATA chapter oriented aviation library:
+
+![A350 Lo-Fi Example](./Library.svg)
 
 ## Workflow
 
@@ -37,7 +46,7 @@ sysml-v2-sql my-db.sqlite import-json ./model.json
 sysml-v2-sql my-db.sqlite fetch "https://your-sysml-v2-modelserver:8000/sysmlv2-api/api" project-name "AviationExample" default-branch
 
 # Step 3
-sqlite3 -box -echo my-db.sqlite < *.sql
+sqlite3 -box -echo my-db.sqlite < queries/*.sql
 ```
 
 In particular the `fetch` sub-command has many options worth checking out `sysml-v2-sql my-db.sqlite fetch help`. For example, it supports HTTPS, optionally ignoring the TLS certificate validity for HTTPS (not recommended!), HTTP basic auth and dumping the fetched data to a JSON file (just like `model.json`).
@@ -47,11 +56,11 @@ In particular the `fetch` sub-command has many options worth checking out `sysml
 Executing the workflow (skipping 2.b., as we already provide the `model.json`), should yield something akin the following:
 
 ```
--- Collects all instantiations of the definititions in the selected ATA package
+-- Collects all instantiations of the definitions in the selected ATA package
 SELECT
-  e3.declaredname AS 'Owner',
-  e2.declaredname AS 'Element Name',
-  e1.declaredname AS 'Type Name'
+  e3.declaredName AS 'Owner',
+  e2.declaredName AS 'Element Name',
+  e1.declaredName AS 'Type Name'
 FROM
   elements AS e1
   LEFT JOIN relations r1 ON e1."@id" = r1.target_id
@@ -61,25 +70,25 @@ FROM
   -- Filters for definition elements in ATA package
 WHERE
   e1."@type" LIKE '%Definition'
-  AND e1.qualifiedname LIKE '%AircraftSystemsATAs%'
+  AND e1.qualifiedName LIKE '%AircraftSystemsATAs%'
   -- Collect related instances of definitions and the owner of the instance elements
   AND r1.name = 'definition'
   AND r2.name = 'owner';
-┌───────────────────────┬───────────────────────┬─────────────────────┐
-│         Owner         │     Element Name      │      Type Name      │
-├───────────────────────┼───────────────────────┼─────────────────────┤
-│ Systems               │ CMS                   │ CabinSystem         │
-│ CMS                   │ GPU                   │ IntegratedCircuit   │
-│ FlightControlComputer │ CPU                   │ IntegratedCircuit   │
-│ Systems               │ Transponder           │ CommunicationSystem │
-│ Systems               │ AirCondition          │ AirConditioning     │
-│ Systems               │ FlightControlComputer │ FlightControl       │
-└───────────────────────┴───────────────────────┴─────────────────────┘
--- Collects all instantiations of the definititions in the selected ATA package
+┌─────────┬──────────────┬─────────────────────┐
+│  Owner  │ Element Name │      Type Name      │
+├─────────┼──────────────┼─────────────────────┤
+│ Systems │ Transponder  │ CommunicationSystem │
+│ Systems │ AirCondition │ AirConditioning     │
+│ Systems │ FCC          │ FlightControl       │
+│ FCC     │ CPU          │ IntegratedCircuit   │
+│ CMS     │ GPU          │ IntegratedCircuit   │
+│ Systems │ CMS          │ CabinSystem         │
+└─────────┴──────────────┴─────────────────────┘
+-- Collects all instantiations of the definitions in the selected ATA package
 SELECT
-  e3.declaredname AS 'Owner',
-  e2.declaredname AS 'Element Name',
-  e1.declaredname AS 'Type Name'
+  e3.declaredName AS 'Owner',
+  e2.declaredName AS 'Element Name',
+  e1.declaredName AS 'Type Name'
 FROM
   elements AS e1
   LEFT JOIN relations r1 ON e1."@id" = r1.target_id
@@ -89,80 +98,83 @@ FROM
   -- Filters for definition elements in ATA package
 WHERE
   e1."@type" LIKE '%Definition'
-  AND e1.qualifiedname LIKE '%StructureATAs%'
+  AND e1.qualifiedName LIKE '%StructureATAs%'
   -- Collect related instances of definitions and the owner of the instance elements
   AND r1.name = 'definition'
   AND r2.name = 'owner';
-┌───────┬──────────────┬───────────┐
-│ Owner │ Element Name │ Type Name │
-├───────┼──────────────┼───────────┤
-│ Body  │ RightWing    │ Wing      │
-│ Body  │ LeftWing     │ Wing      │
-│ Body  │ LongFusalage │ Fusalage  │
-└───────┴──────────────┴───────────┘
+┌──────────┬──────────────┬───────────┐
+│  Owner   │ Element Name │ Type Name │
+├──────────┼──────────────┼───────────┤
+│ Body     │ Fuselage     │ Fuselage  │
+│ Body     │ RightWing    │ Wing      │
+│ Body     │ LeftWing     │ Wing      │
+│ Fuselage │ Doors        │ Door      │
+└──────────┴──────────────┴───────────┘
 -- Select resulting properties
 SELECT
-  DECLAREDNAME,
+  declaredName,
   "@type",
   "@id"
 FROM
-  ELEMENTS
+  elements
   -- Define property filter for elements
 WHERE
   "@type" LIKE '%Part%'
-  AND ISLIBRARYELEMENT = 0;
-┌───────────────────────┬───────────┬──────────────────────────────────────┐
-│     declaredName      │   @type   │                 @id                  │
-├───────────────────────┼───────────┼──────────────────────────────────────┤
-│ CMS                   │ PartUsage │ 28a35dbd-f427-4e3b-990e-075ffe6eb1f5 │
-│ GPU                   │ PartUsage │ 2f133482-9b99-4a30-81d9-90d2f80a8606 │
-│ CPU                   │ PartUsage │ 42de2c63-8c64-46eb-be92-4798dd2ebb18 │
-│ Systems               │ PartUsage │ 51e50152-3c91-4f39-8bc1-12cf8adf8045 │
-│ RightWing             │ PartUsage │ 524e402d-ec5d-4797-be1b-f7a4f2e3f3d3 │
-│ LeftWing              │ PartUsage │ 781a48c3-4b2b-484a-accf-47c5e08bbedb │
-│ A350                  │ PartUsage │ 850d9e98-453c-4ccb-935a-f5ce70f4604c │
-│ LongFusalage          │ PartUsage │ ae3c15aa-1343-4ed4-b394-9d2c61dd577e │
-│ Transponder           │ PartUsage │ b2bbf067-d8dd-4928-a696-6664f2b69061 │
-│ Body                  │ PartUsage │ c3b237db-8b19-496b-b873-00fc11d91dc9 │
-│ AirCondition          │ PartUsage │ cb25eabd-ea33-403c-ba5b-7d96f0423232 │
-│ FlightControlComputer │ PartUsage │ db19835a-4502-4699-991c-6d82f5b9f7b0 │
-└───────────────────────┴───────────┴──────────────────────────────────────┘
+  AND isLibraryElement = 0;
+┌──────────────┬───────────┬──────────────────────────────────────┐
+│ declaredName │   @type   │                 @id                  │
+├──────────────┼───────────┼──────────────────────────────────────┤
+│ Systems      │ PartUsage │ 23d6e6ef-bf96-4761-814e-d404681cd59a │
+│ Fuselage     │ PartUsage │ 262fb1c7-c562-4456-88ee-e19908fa46d7 │
+│ RightWing    │ PartUsage │ 2f06abfd-9d77-4ad6-8afd-a17855c7d74c │
+│ Transponder  │ PartUsage │ 38f8b134-1f10-492f-b687-3bfb99f6dfcc │
+│ LeftWing     │ PartUsage │ 40750252-6f58-4b76-81f5-b1a32e54f147 │
+│ AirCondition │ PartUsage │ 60afdf0a-3e2d-4899-aba8-d239f4825753 │
+│ FCC          │ PartUsage │ 68f435ba-ba17-49c6-b36c-e4896347311b │
+│ A350         │ PartUsage │ 71d25d9f-349e-410b-87b1-be71e4844c04 │
+│ CPU          │ PartUsage │ 95b77fd5-3c0c-4294-907c-c768fbababa9 │
+│ GPU          │ PartUsage │ 99354a2e-dbf5-460a-aabb-96820a6bccc9 │
+│ Body         │ PartUsage │ a72ba1dd-77a7-4c06-99df-e6ea5502ff67 │
+│ CMS          │ PartUsage │ be775bbf-16eb-47d7-b257-4a7de8418904 │
+│ Doors        │ PartUsage │ db2bcbdf-a7fd-470f-bd3e-12df5e05fd39 │
+└──────────────┴───────────┴──────────────────────────────────────┘
 -- Select resulting properties
 SELECT
-  DECLAREDNAME,
+  declaredName,
   "@type",
   "@id"
 FROM
-  ELEMENTS
+  elements
   -- Define property filter for elements
 WHERE
   "@type" LIKE '%Part%';
-┌───────────────────────┬────────────────┬──────────────────────────────────────┐
-│     declaredName      │     @type      │                 @id                  │
-├───────────────────────┼────────────────┼──────────────────────────────────────┤
-│ CMS                   │ PartUsage      │ 28a35dbd-f427-4e3b-990e-075ffe6eb1f5 │
-│ GPU                   │ PartUsage      │ 2f133482-9b99-4a30-81d9-90d2f80a8606 │
-│ IntegratedCircuit     │ PartDefinition │ 3c9270aa-9baf-41c5-8835-071930ba8738 │
-│ CPU                   │ PartUsage      │ 42de2c63-8c64-46eb-be92-4798dd2ebb18 │
-│ CommunicationSystem   │ PartDefinition │ 435c5428-399c-45ef-ae4f-26a686cbe976 │
-│ CabinSystem           │ PartDefinition │ 4822de0d-637d-492e-92c8-dfd84638a5db │
-│ Systems               │ PartUsage      │ 51e50152-3c91-4f39-8bc1-12cf8adf8045 │
-│ RightWing             │ PartUsage      │ 524e402d-ec5d-4797-be1b-f7a4f2e3f3d3 │
-│ Fusalage              │ PartDefinition │ 6fdc28da-d709-41a8-aef2-921d12146b75 │
-│ Wing                  │ PartDefinition │ 72d3b964-431a-4f5e-97de-5d6db239595d │
-│ LandingGear           │ PartDefinition │ 769554f7-f4f1-405b-891a-4473074b3475 │
-│ LeftWing              │ PartUsage      │ 781a48c3-4b2b-484a-accf-47c5e08bbedb │
-│ AirConditioning       │ PartDefinition │ 7ea9950b-b7ad-4cd0-b2ed-d10cb88dcbf0 │
-│ A350                  │ PartUsage      │ 850d9e98-453c-4ccb-935a-f5ce70f4604c │
-│ Door                  │ PartDefinition │ 8c6afde4-1ab6-4682-b67a-fb2db291f2df │
-│ LongFusalage          │ PartUsage      │ ae3c15aa-1343-4ed4-b394-9d2c61dd577e │
-│ AircraftSystem        │ PartDefinition │ afa0994b-431b-416d-b7bf-2d8d5b13d2fb │
-│ Transponder           │ PartUsage      │ b2bbf067-d8dd-4928-a696-6664f2b69061 │
-│ Body                  │ PartUsage      │ c3b237db-8b19-496b-b873-00fc11d91dc9 │
-│ AirCondition          │ PartUsage      │ cb25eabd-ea33-403c-ba5b-7d96f0423232 │
-│ Structure             │ PartDefinition │ d74bb507-4569-47d4-9d05-dc9a7d4a8184 │
-│ Aircraft              │ PartDefinition │ d7f9f591-0070-4a26-9673-5ac41e227011 │
-│ FlightControlComputer │ PartUsage      │ db19835a-4502-4699-991c-6d82f5b9f7b0 │
-│ FlightControl         │ PartDefinition │ e2c222fc-711a-4bfa-b472-e8111fbfa196 │
-└───────────────────────┴────────────────┴──────────────────────────────────────┘
+┌─────────────────────┬────────────────┬──────────────────────────────────────┐
+│    declaredName     │     @type      │                 @id                  │
+├─────────────────────┼────────────────┼──────────────────────────────────────┤
+│ IntegratedCircuit   │ PartDefinition │ 015219d6-6fb6-4e31-bd9e-6138179fb471 │
+│ CommunicationSystem │ PartDefinition │ 14563487-7a36-454f-ad32-cf29beca175a │
+│ Systems             │ PartUsage      │ 23d6e6ef-bf96-4761-814e-d404681cd59a │
+│ CabinSystem         │ PartDefinition │ 25c0255e-a9c9-43b6-89b7-a8f1351ddbb0 │
+│ Fuselage            │ PartUsage      │ 262fb1c7-c562-4456-88ee-e19908fa46d7 │
+│ RightWing           │ PartUsage      │ 2f06abfd-9d77-4ad6-8afd-a17855c7d74c │
+│ AircraftSystem      │ PartDefinition │ 35fbf117-1e44-4393-a46d-4069b7d9397c │
+│ Structure           │ PartDefinition │ 3875c665-d4b1-4efa-a006-b63a5e3d56f4 │
+│ Transponder         │ PartUsage      │ 38f8b134-1f10-492f-b687-3bfb99f6dfcc │
+│ LeftWing            │ PartUsage      │ 40750252-6f58-4b76-81f5-b1a32e54f147 │
+│ AirConditioning     │ PartDefinition │ 5d25da02-9c27-495e-bef4-56eb1bfcaf4f │
+│ AirCondition        │ PartUsage      │ 60afdf0a-3e2d-4899-aba8-d239f4825753 │
+│ Door                │ PartDefinition │ 614f2b1d-0fb8-47c2-b470-99702c6406db │
+│ Wing                │ PartDefinition │ 67b9aa48-4688-46c5-98a9-e57271ac782e │
+│ FCC                 │ PartUsage      │ 68f435ba-ba17-49c6-b36c-e4896347311b │
+│ A350                │ PartUsage      │ 71d25d9f-349e-410b-87b1-be71e4844c04 │
+│ Aircraft            │ PartDefinition │ 8d74244a-fb60-40c2-96a2-84087d56a0b2 │
+│ CPU                 │ PartUsage      │ 95b77fd5-3c0c-4294-907c-c768fbababa9 │
+│ GPU                 │ PartUsage      │ 99354a2e-dbf5-460a-aabb-96820a6bccc9 │
+│ Body                │ PartUsage      │ a72ba1dd-77a7-4c06-99df-e6ea5502ff67 │
+│ CMS                 │ PartUsage      │ be775bbf-16eb-47d7-b257-4a7de8418904 │
+│ Fuselage            │ PartDefinition │ cf9a9628-aa0d-4915-a553-76ca5508f5e7 │
+│ Doors               │ PartUsage      │ db2bcbdf-a7fd-470f-bd3e-12df5e05fd39 │
+│ LandingGear         │ PartDefinition │ eeab782b-ea04-4032-8762-e6e4ff32ce4d │
+│ FlightControl       │ PartDefinition │ fd4c5fc6-b892-4962-a895-0df580e137df │
+└─────────────────────┴────────────────┴──────────────────────────────────────┘
 ```

@@ -1,10 +1,10 @@
--- Select resulting properties 
+-- Select resulting properties
 SELECT
-  DECLAREDNAME,
+  declaredName,
   "@type",
   "@id"
 FROM
-  ELEMENTS
+  elements
   -- Define property filter for elements
 WHERE
   "@type" LIKE '%Part%';
