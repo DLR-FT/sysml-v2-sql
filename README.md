@@ -43,7 +43,7 @@ It can:
 
 For this library the copyright belongs to the German Aerospace Center / Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR):
 
-Copyright (c) 2025 Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)
+Copyright © 2025 Deutsches Zentrum für Luft- und Raumfahrt e.V. (DLR)
 
 Licensed under MIT + Apache 2.0. That means, as a downstream consumer of this software you may
 choose to either use it under MIT or under Apache 2.0 license, at your discretion. All contributions
